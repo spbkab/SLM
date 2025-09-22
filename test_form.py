@@ -51,15 +51,3 @@ def test_unsuccessful_login(driver):
 
     flash_element = driver.find_element(By.CLASS_NAME, "flash")
     assert "Your username is invalid!" in flash_element.text
-import pytest
-import allure
-
-# Метка уровня значимости ("smoke" обозначает базовую проверку)
-@pytest.mark.smoke
-# Название теста, видимое в отчете
-@allure.title("Тестирование базовой функциональности")
-# Краткое описание цели теста
-@allure.description("Проверяем работу основной части функционала.")
-def test_basic_functionality():
-    # Сам тестовый сценарий здесь
-    assert True
