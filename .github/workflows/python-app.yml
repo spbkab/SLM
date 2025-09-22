@@ -37,3 +37,12 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+        steps:
+...
+- name: Test with pytest & generate Allure report
+  run: |
+    pytest --alluredir=./reports/allure-report
+- name: Build Allure report
+  run: |
+    mkdir -p reports/html
+    allure generate ./reports/allure-report -o reports/html --clean
