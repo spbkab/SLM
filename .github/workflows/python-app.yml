@@ -46,3 +46,20 @@ jobs:
   run: |
     mkdir -p reports/html
     allure generate ./reports/allure-report -o reports/html --clean
+    jobs:
+  build:
+    ...
+    steps:
+    ...
+    - name: Deploy to GitHub Pages
+      env:
+        GH_PAGES_TOKEN: ${{ secrets.GH_PAGES_TOKEN }}  # Используем созданный секрет
+      run: |
+        cp -R reports/html/* .                  # Копируем отчет в корневую директорию
+        git config user.name github-actions     # Настраиваем Git для авто-коммита
+        git config user.email github-actions@github.com
+        git add .
+        git commit -m "Update Allure report"    # Формируем коммит
+        git remote set-url origin https://${GH_PAGES_TOKEN}@github.com/${{ github.repository }}.git > /dev/null 2>&1
+        git branch -M main gh-pages            # Переключаем на ветвь gh-pages
+        git push -f origin gh-pages            # Отправляем изменения на GitHub Pages
