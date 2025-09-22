@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -19,38 +19,15 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.10"
-    - name: Create virtual environment
+    - name: Install dependencies
       run: |
-        python -m venv venv
-        source venv/bin/activate
-    - name: Install minimal dependencies
-      run: |
-        source venv/bin/activate
         python -m pip install --upgrade pip
-        pip install flake8 pytest==7.1.3 selenium allure-pytest==2.13.2
+        pip install flake8 pytest selenium
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
       run: |
-        source venv/bin/activate
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest & generate Allure report
+    - name: Test with pytest
       run: |
-        source venv/bin/activate
-        pytest --alluredir=./reports/allure-report
-    - name: Build Allure report
-      run: |
-        source venv/bin/activate
-        mkdir -p reports/html
-        allure generate ./reports/allure-report -o reports/html --clean
-    - name: Deploy to GitHub Pages
-      env:
-        GH_PAGES_TOKEN: ${{ secrets.GH_PAGES_TOKEN }}
-      run: |
-        cp -R reports/html/* .
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        git add .
-        git commit -m "Update Allure report"
-        git remote set-url origin https://${GH_PAGES_TOKEN}@github.com/${{ github.repository }}.git > /dev/null 2>&1
-        git branch -M main gh-pages
-        git push -f origin gh-pages
+        pytest
