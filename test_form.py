@@ -24,18 +24,18 @@ def driver():
 def test_successful_login(driver):
     driver.get("https://the-internet.herokuapp.com/login")
 
-    # Заполняем поля ввода
+
     driver.find_element(By.ID, "username").send_keys("tomsmith")
     driver.find_element(By.ID, "password").send_keys("SuperSecretPassword!")
 
-    # Нажимаем кнопку входа
+
     driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
-    # Ждем пока появится заголовок "Secure Area"
+
     wait = WebDriverWait(driver, 10)
     secure_area_header = wait.until(EC.visibility_of_element_located((By.TAG_NAME, "h2")))
 
-    # Проверяем содержимое страницы
+
     assert "Secure Area" in secure_area_header.text
     assert "Welcome to the Secure Area" in driver.page_source
 
@@ -43,11 +43,23 @@ def test_successful_login(driver):
 def test_unsuccessful_login(driver):
     driver.get("https://the-internet.herokuapp.com/login")
 
-    # Заполняем форму неверными данными
+
     driver.find_element(By.ID, "username").send_keys("invalid_user")
     driver.find_element(By.ID, "password").send_keys("invalid_password")
     driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
-    # Ожидаем отображение сообщения об ошибке
+
     flash_element = driver.find_element(By.CLASS_NAME, "flash")
     assert "Your username is invalid!" in flash_element.text
+import pytest
+import allure
+
+# Метка уровня значимости ("smoke" обозначает базовую проверку)
+@pytest.mark.smoke
+# Название теста, видимое в отчете
+@allure.title("Тестирование базовой функциональности")
+# Краткое описание цели теста
+@allure.description("Проверяем работу основной части функционала.")
+def test_basic_functionality():
+    # Сам тестовый сценарий здесь
+    assert True
