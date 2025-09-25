@@ -1,38 +1,40 @@
-name: Run Tests and Generate Reports
+name: Run Tests and Generate Allure Report
 
 on:
   push:
     branches:
-      - main
+      - main  # Измени на нужную ветку
   pull_request:
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: 📂 Check out repository
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: ⚙️ Setup Python environment
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      - name: Install dependencies
+      - name: ✨ Install dependencies
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests and generate report
+      - name: 🎯 Download Chrome & ChromeDriver
+        uses: browsers-lambdatest/selenium-installer-action@v1
+        with:
+          browser-name: chrome
+          version: latest-stable
+
+      - name: 💥 Run tests and generate Allure report
         run: |
+          export CHROMEDRIVER_PATH=$(pwd)/chromedriver
           pytest --alluredir=./reports
-      
-      - name: Serve Allure report locally for debugging
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        run: |
-          allure serve ./reports
-          
-      - name: Publish Allure report on GitHub Pages
+
+      - name: 🌍 Hosting Allure report using GitHub Pages
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: dawidd6/action-allure-report@v2
         env:
