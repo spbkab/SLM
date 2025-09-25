@@ -1,4 +1,4 @@
-name: Test and Report
+name: Run Tests and Generate Reports
 
 on:
   push:
@@ -7,35 +7,36 @@ on:
   pull_request:
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-          
+
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
           pip install -r requirements.txt
-        
+
       - name: Run tests and generate report
         run: |
           pytest --alluredir=./reports
-        
-      - name: Generate Allure report
+      
+      - name: Serve Allure report locally for debugging
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: |
-          mkdir public && cd public
-          cp -R ../reports .
-          ls -la
+          allure serve ./reports
           
-      - name: Publish report to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Publish Allure report on GitHub Pages
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: dawidd6/action-allure-report@v2
         env:
           GH_PAGES_BRANCH: gh-pages
-          PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          REPORT_DIR: reports
         with:
-          path: ./public
-          clean: true
+          token: ${{ secrets.GITHUB_TOKEN }}
