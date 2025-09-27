@@ -1,44 +1,62 @@
-name: Run Tests and Generate Allure Report
+name: Run Tests and Generate Report
 
 on:
   push:
     branches:
-      - main  # Измени на нужную ветку
+      - main
   pull_request:
 
 jobs:
-  build-and-test:
+  build_and_test:
     runs-on: ubuntu-latest
     steps:
-      - name: 📂 Check out repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: ⚙️ Setup Python environment
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      - name: ✨ Install dependencies
+      - name: Install dependencies
         run: |
-          pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: 🎯 Download Chrome & ChromeDriver
-        uses: browsers-lambdatest/selenium-installer-action@v1
-        with:
-          browser-name: chrome
-          version: latest-stable
-
-      - name: 💥 Run tests and generate Allure report
+      - name: Run tests & generate report
         run: |
-          export CHROMEDRIVER_PATH=$(pwd)/chromedriver
-          pytest --alluredir=./reports
+          pytest --alluredir=./reports/test_results
 
-      - name: 🌍 Hosting Allure report using GitHub Pages
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        uses: dawidd6/action-allure-report@v2
-        env:
-          GH_PAGES_BRANCH: gh-pages
-          REPORT_DIR: reports
+      - name: Generate Allure report
+        run: |
+          allure generate ./reports/test_results -o reports/html_report --clean
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          name: html-report
+          path: reports/html_report/
+
+  publish_to_gh_pages:
+    needs: build_and_test
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      contents: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: html-report
+          path: .
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        env:
+          PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        with:
+          deploy_key: ${{ secrets.DEPLOY_KEY }}
+          publish_dir: ./
